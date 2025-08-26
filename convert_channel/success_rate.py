@@ -128,10 +128,9 @@ def run_clip_experiment(embeddings_A, embeddings_D, embeddings_B):
 
     return success_count
 
-# --- Example Usage ---
+
 if __name__ == "__main__":
-    # Define your actual texts here
-    # Ensure these are meaningful for your experiment
+
     '''
     special_texts_A = [
         "with a huge Apricity, with a dog at right side",  # Should match A1
@@ -188,6 +187,3 @@ if __name__ == "__main__":
     embeddings_A, embeddings_D, embeddings_B = get_embeddings(special_texts_A, prompts, test_texts_B)
     probability_of_A_match = run_clip_experiment(embeddings_A, embeddings_D, embeddings_B)
     
-    # You can further analyze the 'results' list for individual outcomes.
-    # for res in results:
-    #     print(res)

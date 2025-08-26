@@ -51,7 +51,7 @@ def get_new_emb(prompt_embs, logo):
     model.eval()
     for param in model.parameters():
         param.requires_grad = False
-    # 推理
+
     # with torch.no_grad():
     
     logo_emb = torch.load(f"../poison_emb/sampled_db/{logo}/logo.pt")

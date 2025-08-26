@@ -10,7 +10,6 @@ from functools import cmp_to_key
 from utils import get_all_diffusiondb_prompts
 import sys
 
-# 检查是否有可用的GPU
 if torch.cuda.is_available():
     device = torch.device("cuda")
     print("GPU is available. Using CUDA device.")
@@ -29,14 +28,13 @@ class Data:
         self.id = id
         self.vector = vector
         self.access_count = 0
-        self.last_accessed = 0 # 用于模拟时间，越小表示越久未访问
+        self.last_accessed = 0 
         self.weight = weight
-        self.is_key = is_key # 标记是否是Key Data，辅助区分
+        self.is_key = is_key 
 
     def __repr__(self):
         return f"Data(ID: {self.id}, Key:{self.is_key}, Access:{self.access_count}, LastAccess:{self.last_accessed})"
 
-    # 使Data对象可哈希，以便作为字典的key
     def __hash__(self):
         return hash(self.id)
 
@@ -47,11 +45,11 @@ class Data:
 
 class StoragePool:
     def __init__(self, max_total_value_size, max_value_per_key=5):
-        self.max_total_value_size = max_total_value_size # 存储池中Value Data的总上限
-        self.max_value_per_key = max_value_per_key # 每个Key最多存储多少条Value数据
-        self.pool = {}  # key: Key Data object, value: list of Value Data objects
-        self.current_time = 0 # 模拟时间
-        self.total_value_data_count = 0 # 当前池中Value Data的总数量
+        self.max_total_value_size = max_total_value_size 
+        self.max_value_per_key = max_value_per_key 
+        self.pool = {}  
+        self.current_time = 0 
+        self.total_value_data_count = 0 
         self.global_evict_candidates = []
         self.similarity_threshold = 0.65
         self.evict_key_ids = []
@@ -98,18 +96,7 @@ class StoragePool:
                 for val_data in value_data_list
             ]            
             final_topk = heapq.nsmallest(5, global_evict_candidates, key=lambda x: x[2].access_count * x[2].weight)
-        '''
-        for key_data, value_data_list in self.pool.items():
-            if replacement_policy != "LCBFU":
-                eviction_score = key_data.last_accessed
-                heapq.heappush(global_evict_candidates, (eviction_score, key_data))
-            else:
-                for val_data in value_data_list:
-                    # 淘汰分数：越小越容易淘汰。访问次数少，最近访问时间小（久未访问）则分数低
-                    # 这里可以引入Key的权重、Value在列表中的权重等
-                    eviction_score = val_data.access_count  * val_data.weight
-                    heapq.heappush(global_evict_candidates, (eviction_score, val_data.id, key_data, val_data)) # 存储key_data以便从池中删除
-        '''
+
         evicted_items = []
         for _ in range(min(num_to_evict, len(final_topk))):
             if not final_topk:
@@ -124,16 +111,15 @@ class StoragePool:
             else:
                 _, parent_key, val_data_to_evict = heapq.heappop(final_topk)
                 
-                # 从父Key的Value列表中移除
                 if parent_key in self.pool and val_data_to_evict in self.pool[parent_key]:
                     self.pool[parent_key].remove(val_data_to_evict)
                     self.total_value_data_count -= 1
                     evicted_items.append(val_data_to_evict)
-                    # 如果一个Key下的所有Value都被淘汰完了，可以考虑淘汰这个Key
+                    
                     if not self.pool[parent_key]:
                         del self.pool[parent_key]
                         self.evict_key_ids.append(parent_key.id)
-                    # print(f"  Key {parent_key.id} 因所有Value被淘汰而移除。")
+                    
         return evicted_items
 
 
@@ -154,14 +140,13 @@ class StoragePool:
     def process_incoming_data(self, new_data, replacement_policy="LCBFU", replace_cache=False):
         self.current_time += 1
         
-        # 记录操作前池中所有数据的ID，用于判断淘汰
         all_data_ids_before = self._get_all_current_data_ids()
 
         best_match_key_data = None
         best_key_similarity = -1
 
         all_key_data_list = list(self.pool.keys())
-        # 1. 查找相似Key
+        
         if all_key_data_list:
             # Stack all key vectors into a single tensor for batch processing
             # Shape will be (num_keys, vector_dim)
@@ -197,17 +182,15 @@ class StoragePool:
 
         if best_match_key_data:
             # value_data_list = self.pool[best_match_key_data]
-            #     # 检查淘汰情况并返回
+            
             # newly_evicted_ids = all_data_ids_before - self._get_all_current_data_ids()
             return best_match_key_data.id, self.evict_key_ids
 
         else:
-            # 3. Key未命中: 插入新Key及其5个Value
-            # 预计需要增加5个Value Data
-            required_space = self.max_value_per_key # 假设新Key总是带来5个Value
+
+            required_space = self.max_value_per_key 
 
             if self.total_value_data_count + required_space > self.max_total_value_size:
-                # 需要全局淘汰以腾出空间
                 
                 if replacement_policy == "LCBFU":
                     num_to_evict = (self.total_value_data_count + required_space) - self.max_total_value_size
@@ -216,21 +199,17 @@ class StoragePool:
                     num_to_evict = 1
                 evicted_global_values = self._evict_value_data_global(num_to_evict, replacement_policy)
                 if len(evicted_global_values) < num_to_evict:
-                    print(f"  WARN: 无法淘汰足够的Value数据，目标 ，实际淘汰 {len(evicted_global_values)}。")
+                    print(f"  WARN: unable to eliminate enough value targets, to achieve eviction {len(evicted_global_values)}。")
                     return 'failed_global_eviction', set()
 
-            # 插入新Key和其5个Value
-            new_key = Data(new_data.id, new_data.vector, is_key=True) # 确保作为Key
+            new_key = Data(new_data.id, new_data.vector, is_key=True)
             new_key.last_accessed = self.current_time
-            # self._update_data_access(new_key) # Key自身也要更新访问信息
+            
             self.pool[new_key] = []
 
-            # 生成并插入剩余的4条新的Value Data
             for j in range(self.max_value_per_key):
-                # 假设新的Value数据ID是基于new_data.id递增的
-                # 注意：这里需要确保ID唯一性，在实际应用中更应有全局ID生成器
                 new_value_id = f"{new_data.id}_val{j}" 
-                # 这些Value的向量可以与new_data相似，或完全随机
+                
                 new_val = Data(new_value_id, None, weight=j + 1, is_key=False)
                 if "insert_cache" in new_value_id:
                     new_val.access_count += 1000
@@ -268,12 +247,11 @@ def simulate_data_retention(max_pool_size,
                             write_file=None,):
     storage_pool = StoragePool(max_pool_size)
     log_file = open(write_file, "w")
-    # 记录所有进入过系统的数据的引入时间，无论是否被淘汰
+    
     data_introduction_time = {}
-    # 记录数据被淘汰的时间，用于计算保留时间
+    
     data_eviction_time = {}
 
-    # 初始ID计数器
     global_data_id_counter = 0
     
     target_emb = get_embeddings(target_prompts)
@@ -323,10 +301,8 @@ def simulate_data_retention(max_pool_size,
                 new_incoming_data = Data(new_data_id, cur_prompt_emb[b].unsqueeze(0))
             global_data_id_counter += 1
                     
-            # 记录新传入数据的时间，它可能是Key或Value
             data_introduction_time[new_incoming_data.id] = storage_pool.current_time
 
-            # ProcessIncomingData现在会返回操作类型和被淘汰的数据ID
             hit_id, newly_evicted_ids = storage_pool.process_incoming_data(new_incoming_data, replacement_policy, replace_cache=replace_cache)
             storage_pool.evict_key_ids = []
 
@@ -373,7 +349,6 @@ def read_prompts_from_file(file_path):
             prompt = f.readline()
     return prompts
 
-# --- 运行模拟 ---
 if __name__ == "__main__":
     items_per_gb = 2048
     base_dir = sys.argv[1]
@@ -416,7 +391,7 @@ if __name__ == "__main__":
             insert_prompts = read_prompts_from_file(insert_file)
 
             
-            MAX_POOL_SIZE = int(items_per_gb * cache_size)  # 存储池最大容量
+            MAX_POOL_SIZE = int(items_per_gb * cache_size) 
 
             hit_rate = simulate_data_retention(
                 max_pool_size=MAX_POOL_SIZE,

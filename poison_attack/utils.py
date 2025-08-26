@@ -14,19 +14,16 @@ def get_all_diffusiondb_prompts():
     all_prompts = []
 
     for csv_file in tqdm(csv_files, desc="Reading CSV files"):
-        df = pd.read_csv(csv_file, usecols=["prompt"])  # 只加载 prompt 列
+        df = pd.read_csv(csv_file, usecols=["prompt"])
         all_prompts.extend(df["prompt"].tolist())
     return all_prompts
     # print(f"Loaded {len(all_prompts):,} prompts into list.")
 
 def get_clip_text_embedding(text):
-    """
-    根据文本生成CLIP embedding。
-    """
     with torch.no_grad():
         text = clip.tokenize(text, truncate=True).cuda()
         text_features = clip_model.encode_text(text)
-    # 归一化 embedding 以便计算余弦相似度
+    
     text_features = text_features / text_features.norm(dim=-1, keepdim=True)
     return text_features
 

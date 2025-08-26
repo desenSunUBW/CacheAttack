@@ -34,7 +34,6 @@ class ClipPhraseTransformerAugmentor(nn.Module):
         out = transformed[:, 2]
         return F.normalize(self.output_proj(out), p=2, dim=-1)
 
-# 模拟数据（训练时请换成真实的CLIP embedding数据）
 def generate_mock_data(logo):
     text_embed = torch.load(f"sampled_db/original.pt").to(dtype=torch.float)
     target_embed = torch.load(f"sampled_db/{logo}/emb_with_logo.pt").to(dtype=torch.float)
@@ -46,23 +45,20 @@ def train():
     # logos = ["Chanel", "Nike", "Apple", "Barcelona", "KFC", "Mcdonald"]
     logos = ["blue moon sign", "Mcdonald sign", "Apple sign", "Chanel symbol", "circled triangle symbol", "circled Nike symbol"]
     for logo in logos:
-        # 参数
+
         embed_dim = 768
         batch_size = 64
         num_epochs = 50
         lr = 1e-4
         device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
-        # 数据准备
         text_embed, logo_emb, target_embed = generate_mock_data(logo)
         dataset = TensorDataset(text_embed, target_embed)
         dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True)
 
-        # 模型 & 优化器
         model = ClipPhraseTransformerAugmentor(embed_dim=embed_dim, logo=logo).to(device)
         optimizer = torch.optim.Adam(model.parameters(), lr=lr, weight_decay=1e-3)
 
-        # 训练
         for epoch in range(num_epochs):
             total_loss = 0
             model.train()
@@ -82,7 +78,6 @@ def train():
             avg_loss = total_loss / len(dataloader)
             print(f"[Epoch {epoch+1}] Loss: {avg_loss:.4f}")
 
-        # 保存模型
         torch.save(model.state_dict(), f"sampled_db/{logo}/clip_phrase_model.pt")
 
 if __name__ == "__main__":

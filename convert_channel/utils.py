@@ -10,7 +10,7 @@ def get_all_diffusiondb_prompts():
     all_prompts = []
 
     for csv_file in tqdm(csv_files, desc="Reading CSV files"):
-        df = pd.read_csv(csv_file, usecols=["prompt"])  # 只加载 prompt 列
+        df = pd.read_csv(csv_file, usecols=["prompt"]) 
         all_prompts.extend(df["prompt"].tolist())
     return all_prompts
     # print(f"Loaded {len(all_prompts):,} prompts into list.")
