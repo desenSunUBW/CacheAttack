@@ -1,4 +1,4 @@
-# The Cache is a Trap: Practical Attacks on Text-to-Image Diffusion via Approximate Caching
+# Attacks on Approximate Caches in Text-to-Image Diffusion Models
 Three Attacks:
 * Convert Channel
 * Prompt Stealing
