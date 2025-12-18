@@ -505,7 +505,7 @@ if __name__ == "__main__":
         all_data["clip_embedding"] = embedding   
         all_data["captions"] = [{"caption": "unknown"}]
     else:
-        FILE_PATH = f"/home/desen/diffusion_sec/target_poisoned_prompts/"
+        FILE_PATH = "" # fill in your file path
         all_files = []
         for subfolder in os.listdir(FILE_PATH):
             subfolder_path = os.path.join(FILE_PATH, subfolder)
