@@ -20,12 +20,14 @@ import argparse
 args = argparse.ArgumentParser()
 args.add_argument("--option", "-o", type=int, required=True)
 args.add_argument("--num_of_rounds", "-n", type=int)
+args.add_argument("--directory", "-dir", type=str)
 args = args.parse_args()
 option = args.option
 num = args.num_of_rounds
+directory = args.directory
 
 DATA_HOME = os.getenv("DATA_HOME")
-PROJECT_PATH = f"{DATA_HOME}/diffusion-cache-security"
+PROJECT_PATH = f"{DATA_HOME}/diffusion-cache-security/{directory}"
 
 seed_value = 42
 random.seed(seed_value)
@@ -62,7 +64,7 @@ MODEL_PATH=f"./data/checkpoints-max_tokens_101-prefix_length_20-bs_32-compiled-M
 
 D = torch.device
 CPU = torch.device("cpu")
-DEVICE = "cuda:1"
+DEVICE = "cuda:0"
 # DEVICE = "cpu"
 
 gpt2_model = "gpt2"
@@ -173,7 +175,6 @@ def main(path, data, option, model_name="coco", use_beam_search=False, is_only_p
         # with open(f"./data/evaluations/evaluation_result_{path['dir'][7:]}-{path['model'][:-3]}{surfix}.pkl", "wb") as f:
         #     pickle.dump(cosine_similarities_result, f)
             """
-        return prompts
         print(f"Generated prompts: {len(prompts)}")
         
         pickle.dump(prompts, open(f"{PROJECT_PATH}/exploited_prompts_{num}.pkl", "wb"))
@@ -479,15 +480,15 @@ if __name__ == "__main__":
     #     all_data["captions"] = all_data["captions"][:10]
     #     all_data["clip_embedding"] = all_data["clip_embedding"][:10]
     # else:
-    #     data_path = "../diffusion/result.pt"
-    #     all_data = dict()
-    #     all_data["clip_embedding"] = []
-    #     all_data["clip_embedding"].append(torch.load(data_path, map_location='cpu'))
-    #     all_data["captions"] = []
-    #     all_data["captions"].append({"caption": "anime girl walking in the woods"})
+        # data_path = "../diffusion/result.pt"
+        # all_data = dict()
+        # all_data["clip_embedding"] = []
+        # all_data["clip_embedding"].append(torch.load(data_path, map_location='cpu'))
+        # all_data["captions"] = []
+        # all_data["captions"].append({"caption": "anime girl walking in the woods"})
         
     if option == 0:
-        embedding = pickle.load(open(f"{DATA_HOME}/diffusion-cache-security/cand_emb_{num}.pkl", "rb"))
+        embedding = pickle.load(open(f"{PROJECT_PATH}/cand_emb_{num}.pkl", "rb"))
         print(f"Embedding shape: {embedding.shape}")
 
         all_data = {}
@@ -496,7 +497,7 @@ if __name__ == "__main__":
         all_data["captions"] = ["unknown"]
     elif option == 1:
         # embedding = pickle.load(open(f"{DATA_HOME}/diffusion-cache-security/closest_hit_prompt.pkl", "rb"))
-        embedding = pickle.load(open(f"{DATA_HOME}/diffusion-cache-security/batch_x_final_{num}.pkl", "rb"))
+        embedding = pickle.load(open(f"{PROJECT_PATH}/batch_x_final_{num}.pkl", "rb"))
         print(f"Embedding shape: {embedding.shape}")
         for emb in embedding:
             print(f"Embedding: {emb.shape}, {emb[:5]}")
@@ -505,37 +506,20 @@ if __name__ == "__main__":
         all_data["clip_embedding"] = embedding   
         all_data["captions"] = [{"caption": "unknown"}]
     else:
-        FILE_PATH = f"/home/desen/diffusion_sec/target_poisoned_prompts/"
-        all_files = []
-        for subfolder in os.listdir(FILE_PATH):
-            subfolder_path = os.path.join(FILE_PATH, subfolder)
-            if os.path.isdir(subfolder_path):
-                files = [
-                    os.path.join(subfolder_path, f)
-                    for f in os.listdir(subfolder_path)
-                    if os.path.isfile(os.path.join(subfolder_path, f))
-                ]
-                all_files.extend(files)
-                
-        # print("\n".join(all_files))
+        FILE_PATH = f"~/diffusion_sec/get_db/new_emb_"
+        embeddings = torch.load(f"{FILE_PATH}Apple.pt")
+        embeddings = torch.concat((embeddings, torch.load(f"{FILE_PATH}Barcelona.pt")), dim=0)
+        embeddings = torch.concat((embeddings, torch.load(f"{FILE_PATH}Chanel.pt")), dim=0)
+        embeddings = torch.concat((embeddings, torch.load(f"{FILE_PATH}'A'.pt")), dim=0)
+        embeddings = torch.concat((embeddings, torch.load(f"{FILE_PATH}Mount Fuji.pt")), dim=0)
+        print(f"Embedding shape: {embeddings.shape}")
+        # exit()
         
-        for file in all_files:
-            embeddings = torch.load(file)
-            
-            all_data = {}
-            all_data["clip_embedding"] = embeddings   
-            all_data["captions"] = [{"caption": "unknown"}]
-            
-            os.makedirs(f"{FILE_PATH}/results", exist_ok=True)
-            
-            prompts = main(MODEL_PATH, all_data, option, model_name, use_beam_search, False)
-            
-            fpath = os.path.splitext("-".join(file.split("/")[-2:]))[0]
-            
-            with open(f"{FILE_PATH}/results/{fpath}.txt", "w") as f:
-                f.write("\n".join(prompts))
-        
-    # main(MODEL_PATH, all_data, option, model_name, use_beam_search, False)
+        all_data = {}
+        all_data["clip_embedding"] = embeddings
+        all_data["captions"] = [{"caption": "unknown"}]
+    
+    main(MODEL_PATH, all_data, option, model_name, use_beam_search, False)
 
     # for model_path in WEIGHTS_PATHS:
     #     print(f"Model path: {model_path}")
