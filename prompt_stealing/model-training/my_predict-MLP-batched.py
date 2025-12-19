@@ -506,20 +506,37 @@ if __name__ == "__main__":
         all_data["clip_embedding"] = embedding   
         all_data["captions"] = [{"caption": "unknown"}]
     else:
-        FILE_PATH = f"~/diffusion_sec/get_db/new_emb_"
-        embeddings = torch.load(f"{FILE_PATH}Apple.pt")
-        embeddings = torch.concat((embeddings, torch.load(f"{FILE_PATH}Barcelona.pt")), dim=0)
-        embeddings = torch.concat((embeddings, torch.load(f"{FILE_PATH}Chanel.pt")), dim=0)
-        embeddings = torch.concat((embeddings, torch.load(f"{FILE_PATH}'A'.pt")), dim=0)
-        embeddings = torch.concat((embeddings, torch.load(f"{FILE_PATH}Mount Fuji.pt")), dim=0)
-        print(f"Embedding shape: {embeddings.shape}")
-        # exit()
+        FILE_PATH = "" # fill in your file path
+        all_files = []
+        for subfolder in os.listdir(FILE_PATH):
+            subfolder_path = os.path.join(FILE_PATH, subfolder)
+            if os.path.isdir(subfolder_path):
+                files = [
+                    os.path.join(subfolder_path, f)
+                    for f in os.listdir(subfolder_path)
+                    if os.path.isfile(os.path.join(subfolder_path, f))
+                ]
+                all_files.extend(files)
+                
+        # print("\n".join(all_files))
         
-        all_data = {}
-        all_data["clip_embedding"] = embeddings
-        all_data["captions"] = [{"caption": "unknown"}]
-    
-    main(MODEL_PATH, all_data, option, model_name, use_beam_search, False)
+        for file in all_files:
+            embeddings = torch.load(file)
+            
+            all_data = {}
+            all_data["clip_embedding"] = embeddings   
+            all_data["captions"] = [{"caption": "unknown"}]
+            
+            os.makedirs(f"{FILE_PATH}/results", exist_ok=True)
+            
+            prompts = main(MODEL_PATH, all_data, option, model_name, use_beam_search, False)
+            
+            fpath = os.path.splitext("-".join(file.split("/")[-2:]))[0]
+            
+            with open(f"{FILE_PATH}/results/{fpath}.txt", "w") as f:
+                f.write("\n".join(prompts))
+        
+    # main(MODEL_PATH, all_data, option, model_name, use_beam_search, False)
 
     # for model_path in WEIGHTS_PATHS:
     #     print(f"Model path: {model_path}")
