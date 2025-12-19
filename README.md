@@ -8,4 +8,4 @@ The embedding-2-prompt reversion model used in the experiment, named "coco_prefi
 
 The logo insertion at embedding space model used in this experiment is "poison_attack/poison_emb/sampled_db/clip_phrase_model.pt", trained by self-constructed dataset. The dataset construction code is in "poison_attack/poison_emb/convert_data_format.py", and the training script is "poison_attack/poison_emb/logo_insertion_model.py". You can train your new model by using the training scripts.
 
-The embedding to prompt with logo model used in this experiment is "coco-prefix_latest.pt". The training script is "poison_attack/poison_emb/recover_prompt_with_logo_model.py", you can train your own model with this script.
+The embedding to prompt with logo model used in this experiment is "coco-prefix_latest.pt", also uploaded to `https://zenodo.org/records/17959605`. The training script is "poison_attack/poison_emb/recover_prompt_with_logo_model.py", you can train your own model with this script.
