@@ -5,11 +5,25 @@ This repository contains implementations of three attacks on approximate caches 
 * **Prompt Stealing Attack** - Recovers prompts from cached embeddings
 * **Poison Attack** - Pollutes the cache to inject logos/markers into generated images
 
+## Pre-trained Models
+
+The pre-trained models used in this experiment are available at:
+- **Zenodo**: `https://doi.org/10.5281/zenodo.17957900`
+- **Hugging Face**: `https://huggingface.co/snownhonoka/attacks-on-approximate-caches-in-text_to_image-diffusion-models`
+
+### Model Details
+
+1. **Embedding-to-Prompt Recovery Model** (`coco_prefix-049.pt`): Trained using the DiffusionDB dataset. You can also train your own model using the training scripts provided in this repo.
+
+2. **Logo Insertion Model** (`clip_phrase_model.pt`): Located at `poison_attack/poison_emb/sampled_db/clip_phrase_model.pt`, trained on a self-constructed dataset. The dataset construction code is in `poison_attack/poison_emb/convert_data_format.py`, and the training script is `poison_attack/poison_emb/logo_insertion_model.py`.
+
+3. **Embedding to Prompt with Logo Model** (`coco-prefix_latest.pt`): Also available at the Zenodo link above. The training script is `poison_attack/poison_emb/recover_prompt_with_logo_model.py`.
+
 ## System Requirements
 
 ### GPU Requirements
 - **Minimum**: GPU with at least **16GB VRAM** (capable of running FLUX.1-schnell model)
-- **Recommended**: GPU with **24GB+ VRAM** (e.g., NVIDIA A100, RTX Ada6000, RTX 4090, or similar)
+- **Recommended**: GPU with **24GB+ VRAM** (e.g., NVIDIA A100, RTX 3090, RTX 4090, or similar)
 - **CUDA**: CUDA 12.6+ compatible GPU
 - The project supports both FLUX.1-schnell and Stable Diffusion 3.5 Medium models
 
@@ -62,40 +76,136 @@ print(f"CUDA version: {torch.version.cuda}")
 
 ### Step 4: Download Pre-trained Models
 
-#### Prompt Recovery Model
-Download the embedding-to-prompt recovery model:
-```bash
-# The model is available at:
-# https://huggingface.co/snownhonoka/attacks-on-approximate-caches-in-text_to_image-diffusion-models
-```
+Download the pre-trained models from the Zenodo or Hugging Face links above and place them in the appropriate directories as specified in each attack's README.
 
 #### Diffusion Models
 The diffusion models (FLUX.1-schnell and Stable Diffusion 3.5 Medium) will be automatically downloaded from Hugging Face when first used.
 
 ### Step 5: Prepare Additional Files
 
-1. **Logo Insertion Model**: The pre-trained model is located at `poison_attack/poison_emb/sampled_db/clip_phrase_model.pt`
-2. **Logo Images**: Prepare logo images for detection (see individual attack READMEs for details)
-3. **Datasets**: Prepare or download DiffusionDB and Lexica datasets as needed
+1. **Logo Images**: Prepare logo images for detection (see individual attack READMEs for details)
+2. **Datasets**: Prepare or download DiffusionDB and Lexica datasets as needed
 
-## Model Information
+## Attack Implementations
 
-### Pre-trained Models
+### Covert Channel Attack
 
-The embedding-2-prompt reversion model used in the experiment is uploaded to `https://huggingface.co/snownhonoka/attacks-on-approximate-caches-in-text_to_image-diffusion-models`, trained using the DiffusionDB dataset. You can also train your own model using the training scripts provided in this repo.
+The Covert Channel attack exploits approximate caches to covertly transmit information through the generation process.
 
-The logo insertion at embedding space model used in this experiment is `poison_attack/poison_emb/sampled_db/clip_phrase_model.pt`, trained on a self-constructed dataset. The dataset construction code is in `poison_attack/poison_emb/convert_data_format.py`, and the training script is `poison_attack/poison_emb/logo_insertion_model.py`. You can train your new model using these training scripts.
+#### Overview
 
-The embedding to prompt with logo model used in this experiment is `coco-prefix_latest.pt`. The training script is `poison_attack/poison_emb/recover_prompt_with_logo_model.py` - you can train your own model with this script.
+The attack consists of three main steps:
+1. **Latency Classifier Evaluation**: Measure the success rate of identifying target prompts based on cache latency patterns
+2. **Image Generation**: Generate images using cached latents from the sender's cache
+3. **Content Classifier Evaluation**: Measure the success rate of detecting markers/logos in the generated images
+
+#### Prerequisites
+
+- PyTorch with CUDA support
+- CLIP model (ViT-L/14)
+- OWLv2 and DINOv2 models for object detection
+- DiffusionDB dataset (CSV file at `../get_db/diffusiondb.csv`)
+- Stable Diffusion 3.5 Medium or FLUX.1-schnell models
+
+#### Usage
+
+**Step 1: Evaluate Latency Classifier**
+
+Run `success_rate.py` to calculate the success rate of the latency classifier:
+
+```bash
+python convert_channel/success_rate.py
+```
+
+This script:
+- Generates CLIP embeddings for special texts A (with markers), test texts B (without markers), and dataset D (DiffusionDB prompts)
+- Calculates cosine similarities between test texts and reference texts
+- Determines success rates based on similarity thresholds and skip levels
+- Outputs the probability of correctly identifying target prompts
+
+**Output**: Success rate metrics for the latency classifier based on embedding similarity.
+
+**Step 2: Generate Images from Sender's Cache**
+
+Run `convert_channel_generation.py` to generate images using cached latents:
+
+```bash
+python convert_channel/convert_channel_generation.py <base_dir>
+```
+
+**Arguments**:
+- `base_dir`: Base directory path where generated images and cache files will be stored
+
+This script:
+- Generates base images using special texts A (with markers) and saves them to `{base_dir}/base/`
+- Saves cache files (latents) to `{base_dir}/cache/`
+- Loads cached latents at appropriate skip levels based on similarity scores
+- Generates converted images using test texts B (without markers) and saves them to `{base_dir}/images/`
+
+**Output Structure**:
+```
+{base_dir}/
+├── base/          # Base images with markers
+├── cache/         # Cached latents at different skip levels
+└── images/        # Converted images without markers
+```
+
+**Step 3: Evaluate Content Classifier**
+
+Run `detection.py` to calculate the success rate of the content classifier (Note: prepare the dog and Mcdonald logo images for comparison):
+
+```bash
+python convert_channel/detection.py <base_dir>
+```
+
+**Arguments**:
+- `base_dir`: Base directory path containing the generated images (same as used in Step 2)
+
+This script:
+- Loads reference marker images (dog.png for FLUX, Mcdonald.png for SD3)
+- Uses OWLv2 for object detection to find logo/marker regions in generated images
+- Uses DINOv2 to compute embeddings and cosine similarity with reference markers
+- Calculates success rates based on whether markers are detected in the images
+
+**Output**: Success rate metrics for the content classifier, showing how often markers are successfully detected in the generated images. The success rate should be over **90%** on average.
+
+#### Workflow Summary
+
+```bash
+# Step 1: Evaluate latency classifier
+python convert_channel/success_rate.py
+
+# Step 2: Generate images from cache
+python convert_channel/convert_channel_generation.py /path/to/output/directory
+
+# Step 3: Evaluate content classifier
+python convert_channel/detection.py /path/to/output/directory
+```
+
+#### Notes
+
+- The scripts support both SD3 (`sd3`) and FLUX (`flux`) models
+- Skip levels are determined based on CLIP similarity scores between original and guessed prompts
+- The detection script requires marker images (`dog.png` for FLUX, `Mcdonald.png` for SD3) to be present in the working directory
+- Ensure sufficient GPU memory for model loading and image generation
+
+### Prompt Stealing Attack
+
+See `prompt_stealing/README.md` for detailed instructions.
+
+### Poison Attack
+
+See `poison_attack/README.md` for detailed instructions.
 
 ## Quick Start
 
 1. **Set up the environment** (see Environment Setup above)
-2. **Read the individual attack READMEs**:
-   - `convert_channel/README.md` - For Covert Channel Attack
+2. **Download pre-trained models** from Zenodo or Hugging Face
+3. **Read the individual attack READMEs**:
+   - `convert_channel/README.md` - For Covert Channel Attack (or see above)
    - `prompt_stealing/README.md` - For Prompt Stealing Attack
    - `poison_attack/README.md` - For Poison Attack
-3. **Follow the workflow** in each README to run the experiments
+4. **Follow the workflow** in each README to run the experiments
 
 ## Troubleshooting
 
@@ -111,3 +221,8 @@ The embedding to prompt with logo model used in this experiment is `coco-prefix_
 ### Environment Issues
 - If conda environment creation fails, try updating conda: `conda update conda`
 - For package conflicts, consider creating a fresh environment and installing packages incrementally
+
+### Model Loading Issues
+- Verify that model paths are correct in the scripts
+- Ensure model checkpoints are downloaded from Zenodo or Hugging Face
+- Check that model files are not corrupted

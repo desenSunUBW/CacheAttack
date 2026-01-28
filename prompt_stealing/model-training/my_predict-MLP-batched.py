@@ -20,12 +20,14 @@ import argparse
 args = argparse.ArgumentParser()
 args.add_argument("--option", "-o", type=int, required=True)
 args.add_argument("--num_of_rounds", "-n", type=int)
+args.add_argument("--directory", "-dir", type=str)
 args = args.parse_args()
 option = args.option
 num = args.num_of_rounds
+directory = args.directory
 
 DATA_HOME = os.getenv("DATA_HOME")
-PROJECT_PATH = f"{DATA_HOME}/diffusion-cache-security"
+PROJECT_PATH = f"{DATA_HOME}/diffusion-cache-security/{directory}"
 
 seed_value = 42
 random.seed(seed_value)
@@ -62,7 +64,7 @@ MODEL_PATH=f"./data/checkpoints-max_tokens_101-prefix_length_20-bs_32-compiled-M
 
 D = torch.device
 CPU = torch.device("cpu")
-DEVICE = "cuda:1"
+DEVICE = "cuda:0"
 # DEVICE = "cpu"
 
 gpt2_model = "gpt2"
@@ -173,7 +175,6 @@ def main(path, data, option, model_name="coco", use_beam_search=False, is_only_p
         # with open(f"./data/evaluations/evaluation_result_{path['dir'][7:]}-{path['model'][:-3]}{surfix}.pkl", "wb") as f:
         #     pickle.dump(cosine_similarities_result, f)
             """
-        return prompts
         print(f"Generated prompts: {len(prompts)}")
         
         pickle.dump(prompts, open(f"{PROJECT_PATH}/exploited_prompts_{num}.pkl", "wb"))
@@ -479,15 +480,15 @@ if __name__ == "__main__":
     #     all_data["captions"] = all_data["captions"][:10]
     #     all_data["clip_embedding"] = all_data["clip_embedding"][:10]
     # else:
-    #     data_path = "../diffusion/result.pt"
-    #     all_data = dict()
-    #     all_data["clip_embedding"] = []
-    #     all_data["clip_embedding"].append(torch.load(data_path, map_location='cpu'))
-    #     all_data["captions"] = []
-    #     all_data["captions"].append({"caption": "anime girl walking in the woods"})
+        # data_path = "../diffusion/result.pt"
+        # all_data = dict()
+        # all_data["clip_embedding"] = []
+        # all_data["clip_embedding"].append(torch.load(data_path, map_location='cpu'))
+        # all_data["captions"] = []
+        # all_data["captions"].append({"caption": "anime girl walking in the woods"})
         
     if option == 0:
-        embedding = pickle.load(open(f"{DATA_HOME}/diffusion-cache-security/cand_emb_{num}.pkl", "rb"))
+        embedding = pickle.load(open(f"{PROJECT_PATH}/cand_emb_{num}.pkl", "rb"))
         print(f"Embedding shape: {embedding.shape}")
 
         all_data = {}
@@ -496,7 +497,7 @@ if __name__ == "__main__":
         all_data["captions"] = ["unknown"]
     elif option == 1:
         # embedding = pickle.load(open(f"{DATA_HOME}/diffusion-cache-security/closest_hit_prompt.pkl", "rb"))
-        embedding = pickle.load(open(f"{DATA_HOME}/diffusion-cache-security/batch_x_final_{num}.pkl", "rb"))
+        embedding = pickle.load(open(f"{PROJECT_PATH}/batch_x_final_{num}.pkl", "rb"))
         print(f"Embedding shape: {embedding.shape}")
         for emb in embedding:
             print(f"Embedding: {emb.shape}, {emb[:5]}")

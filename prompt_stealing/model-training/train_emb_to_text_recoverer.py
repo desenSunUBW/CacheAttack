@@ -29,7 +29,7 @@ class ClipCocoDataset(Dataset):
         prefix = self.prefixes[self.caption2embedding[item]]
         return tokens, mask, prefix
 
-    def __init__(self, data_path: str,  prefix_length: int, gpt2_type: str = "gpt2",
+    def __init__(self, data_path: str,  prefix_length: int, gpt2_type: str = "gpt2-medium",
                  normalize_prefix=False):
         self.tokenizer = GPT2Tokenizer.from_pretrained(gpt2_type)
         self.prefix_length = prefix_length
