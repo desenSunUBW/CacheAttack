@@ -44,7 +44,8 @@ def generate_mock_data(logo):
 
 def train():
     # logos = ["Chanel", "Nike", "Apple", "Barcelona", "KFC", "Mcdonald"]
-    logos = ["blue moon sign", "Mcdonald sign", "Apple sign", "Chanel symbol", "circled triangle symbol", "circled Nike symbol"]
+    # logos = ["blue moon sign", "Mcdonald sign", "Apple sign", "Chanel symbol", "circled triangle symbol", "circled Nike symbol"]
+    logos = ["Apple sign"]
     for logo in logos:
         embed_dim = 768
         batch_size = 128

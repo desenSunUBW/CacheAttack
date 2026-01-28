@@ -82,12 +82,12 @@ for model in models:
                 special_texts_A[convert_index],
                 num_inference_steps=num_inference_steps,
                 latents=latents,
-                cache_path=f"{base_dir}/cache/{model}-{texts_B[convert_index]}-{index}",
+                cache_path=f"{base_dir}/cache/{model}-{test_texts_B[convert_index]}-{index}",
                 guidance_scale=3.5,
             )[0][0]
-            image.save(f"{base_dir}/base/{model}-{texts_B[convert_index]}-{index}.png")
+            image.save(f"{base_dir}/base/{model}-{test_texts_B[convert_index]}-{index}.png")
 
-            latents = torch.load(f"{base_dir}/cache/{model}-{texts_B[convert_index]}-{index}-{skip_level * steps_per_level}.pt")
+            latents = torch.load(f"{base_dir}/cache/{model}-{test_texts_B[convert_index]}-{index}-{skip_level * steps_per_level}.pt")
             latents = latents.cuda().to(dtype=torch.float16)
             # latents = torch.randn([1, 16, 128, 128], device="cuda", dtype=torch.float16)
 
@@ -95,9 +95,9 @@ for model in models:
                 test_texts_B[convert_index],
                 num_inference_steps=num_inference_steps,
                 latents=latents,
-                cache_path=f"{base_dir}/cache/{model}-{texts_B[convert_index]}-{index}",
+                cache_path=f"{base_dir}/cache/{model}-{test_texts_B[convert_index]}-{index}",
                 skip_steps=skip_level * steps_per_level,
                 guidance_scale=3.5,
                 save_cache=False,
             )[0][0]
-            image.save(f"{base_dir}/images/{model}-{texts_B[convert_index]}-{index}.png")
+            image.save(f"{base_dir}/images/{model}-{test_texts_B[convert_index]}-{index}.png")

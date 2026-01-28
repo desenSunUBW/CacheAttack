@@ -279,7 +279,7 @@ def main():
     
     if args.generate_cache:
         for index, _ in processor.unique_prompts_per_index.items():
-            torch.cuda.manual_seed(time.time() % 1000000)
+            # torch.cuda.manual_seed(time.time() % 1000000)
             latents = torch.randn(generator.shape, device="cuda", dtype=torch.float16)
             # print(processor.poisoned_cache[index])
             generator.generate_images(
@@ -292,14 +292,14 @@ def main():
             )
             # break
 
-    '''
+    # '''
     if not args.analyze_only:
         # Generate images
         image_number = 0
         for (index, prompt) in selected_prompts:
             skip_steps = utils.get_skip_steps(processor.poisoned_cache[index], prompt, args.steps // 10)
             if skip_steps == 0:
-                print(f"index {index} has a wrong hit with {prompt}")
+                # print(f"index {index} has an error hit with {prompt}")
                 skip_steps = 3
             try:
                 latents = torch.load((f"{args.cache_dir}/{index}-{skip_steps}.pt")).cuda()
@@ -328,8 +328,8 @@ def main():
             #     skip_steps=0,
             # )
             image_number += 1
-            break
-    '''
+            # break
+    # '''
 
 if __name__ == "__main__":
     # Uncomment the line below to run the example

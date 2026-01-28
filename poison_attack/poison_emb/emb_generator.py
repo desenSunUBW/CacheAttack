@@ -13,10 +13,12 @@ mask = np.load("sampled_db/mask.npy")
 prompts = list(compress(prompts, mask))
 
 # logos = ["Chanel", "Nike", "Apple", "Barcelona", "KFC", "Mcdonald"]
-logos = ["blue moon sign", "Mcdonald sign", "Apple sign", "Chanel symbol", "circled triangle symbol", "circled Nike symbol"]
+# logos = ["blue moon sign", "Mcdonald sign", "Apple sign", "Chanel symbol", "circled triangle symbol", "circled Nike symbol"]
+logos = ["Apple sign"]
 prompts = list(map(str, prompts))
 prompts.sort()
-logo_contexts = ["huge blue moon sign behind", "huge Mcdonald sign at top", "huge Apple sign", "huge Chanel symbol", "huge circled triangle symbol at left side", "huge circled Nike symbol at left side"]
+logo_contexts = ["huge Apple sign"]
+# logo_contexts = ["huge blue moon sign behind", "huge Mcdonald sign at top", "huge Apple sign", "huge Chanel symbol", "huge circled triangle symbol at left side", "huge circled Nike symbol at left side"]
 '''
 for index in range(len(logos)):
     if not os.path.exists(f"sampled_db/{logos[index]}"):
