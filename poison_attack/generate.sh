@@ -2,8 +2,8 @@
 
 # Simple script to run Python prompt processor 6 times with different output paths
 # PROMPT_FILE="$1"
-LOGOs=("blue moon sign" "Mcdonald sign" "Apple sign" "Chanel symbol" "circled triangle symbol" "circled Nike symbol")
-LOGOs=("blue moon sign")
+# LOGOs=("blue moon sign" "Mcdonald sign" "Apple sign" "Chanel symbol" "circled triangle symbol" "circled Nike symbol")
+LOGOs=("Apple sign")
 MODEL="flux"
 BASIC_PATH=""
 DATASET="lexica"

@@ -16,14 +16,18 @@ from tqdm import tqdm
 import os
 
 import argparse
+from emb_generator import insert_logo_random, insert_logo_mid, insert_logo_end
 
 args = argparse.ArgumentParser()
 args.add_argument("--option", "-o", type=int, required=True)
 args.add_argument("--num_of_rounds", "-n", type=int)
+args.add_argument("--model_path", "-mp", type=str, required=True)
+args.add_argument("--emb_dir", "-ed", type=str, required=True)
 args = args.parse_args()
 option = args.option
 num = args.num_of_rounds
-
+model_path = args.model_path
+emb_dir = args.emb_dir
 DATA_HOME = os.getenv("DATA_HOME")
 PROJECT_PATH = f"{DATA_HOME}/diffusion-cache-security"
 
@@ -45,7 +49,7 @@ TNS = Union[Tuple[TN, ...], List[TN]]
 TSN = Optional[TS]
 TA = Union[T, ARRAY]
 
-MODEL_PATH=f"checkpoints_mid/coco_prefix_latest.pt" # the prompt recover checkpoint that can generate the logo information in the mid of the prompt
+MODEL_PATH=model_path # the prompt recover checkpoint that can generate the logo information in the mid of the prompt
 
 D = torch.device
 CPU = torch.device("cpu")
@@ -310,11 +314,12 @@ if __name__ == "__main__":
         all_data["clip_embedding"] = embedding   
         all_data["captions"] = [{"caption": "unknown"}]
     else:
-        logos = ["blue moon sign", "Mcdonald sign", "Apple sign", "Chanel symbol", "circled triangle symbol", "circled Nike symbol"]
+        logos = ["Apple sign"]
+        # logos = ["blue moon sign", "Mcdonald sign", "Apple sign", "Chanel symbol", "circled triangle symbol", "circled Nike symbol"]
         datasets = ["diffusiondb", "lexica"]
         models = ["flux"]
-        emb_dir = "" # fill in your emb dir
-        emb_dir = f"/data02/daesen/diffusion_sec/poison_attack"
+        # emb_dir = "" # fill in your emb dir
+        # emb_dir = f"/data02/daesen/diffusion_sec/poison_attack"
         for model in models:
             for dataset in datasets:
                 for logo in logos:
@@ -332,4 +337,7 @@ if __name__ == "__main__":
                     prompts = main(MODEL_PATH, all_data, option, model_name, use_beam_search, False, 32)
                     with open(f"{emb_dir}/{logo}/{dataset}-{model}_insert_emb_space.log", "w") as f:
                         for prompt in prompts:
-                            f.write(f"{prompt}\n")
+                            if logo.lower() in prompt.lower():
+                                f.write(f"{prompt}\n")
+                            else:
+                                f.write(f"{insert_logo_random(prompt, logo)}\n")

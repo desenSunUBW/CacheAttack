@@ -9,9 +9,12 @@ clip_model, preprocess = clip.load("ViT-L/14", device="cuda")
 clip_model.eval()
 datasets = ["lexica", "diffusiondb"]
 models = ["flux"]
-logo_names = ["blue moon sign", "Mcdonald sign", "Apple sign", "Chanel symbol", "circled triangle symbol", "circled Nike symbol"]
-logo_index = 2
+# one of "blue moon sign", "Mcdonald sign", "Apple sign", "Chanel symbol", "circled triangle symbol", "circled Nike symbol"
+logo_names = ["Apple sign"]
+logo_index = 0
 base_dir = sys.argv[1]
+
+
 
 def get_emb(prompts_with_logo):
     with torch.no_grad():
@@ -47,14 +50,14 @@ def get_new_emb(prompt_embs, logo):
     dtype = prompt_embs.dtype
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
     model = ClipPhraseTransformerAugmentor(embed_dim=embed_dim).to(device)
-    model.load_state_dict(torch.load(f"../poison_emb/sampled_db/{logo}/clip_phrase_model.pt", map_location=device))
+    model.load_state_dict(torch.load(f"{base_dir}/{logo}/clip_phrase_model.pt", map_location=device))
     model.eval()
     for param in model.parameters():
         param.requires_grad = False
 
     # with torch.no_grad():
     
-    logo_emb = torch.load(f"../poison_emb/sampled_db/{logo}/logo.pt")
+    logo_emb = torch.load(f"{base_dir}/{logo}/logo.pt")
     new_embed = model(prompt_embs.to(dtype=torch.float), logo_emb.to(dtype=torch.float))
     return new_embed.to(dtype=dtype)
 
@@ -174,5 +177,13 @@ def get_recover_prompt_emb():
                 print(f"{logo_names[logo_index]}'s direct compare to generator is{mean(similarity_by_logo)}")
                 print(f"direct insert logo outperforms for {recover_better} times")
 
+if __name__ == "__main__":
+    if sys.argv[2] == "similarity":
+        get_similarity()
+    elif sys.argv[2] == "recover":
+        get_recover_prompt_emb()
+    else:
+        print("Invalid argument")
+        exit(1)
 # get_similarity()
-get_recover_prompt_emb()
+# get_recover_prompt_emb()

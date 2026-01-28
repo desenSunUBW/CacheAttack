@@ -8,10 +8,10 @@ import pandas as pd
 import time,os
 import clip
 
-
-logo_names = ["blue moon sign", "Mcdonald sign", "Apple sign", "Chanel symbol", "circled triangle symbol", "circled Nike symbol"]
+# one of "blue moon sign", "Mcdonald sign", "Apple sign", "Chanel symbol", "circled triangle symbol", "circled Nike symbol"
+logo_names = ["Apple sign"]
 datasets = ["lexica", "diffusiondb"]
-models = ["sd3"]
+models = ["flux"]
 DEVICE = "cuda:0"
 
 inference_indices = {

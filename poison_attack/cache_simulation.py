@@ -356,6 +356,7 @@ if __name__ == "__main__":
     models = ["flux"]
     replacement_policy = "LCBFU"
     logos = ["blue moon sign", "Mcdonald sign", "Apple sign", "Chanel symbol", "circled triangle symbol", "circled Nike symbol"]
+    # logos = ["Apple sign"]
     logo_index = int(sys.argv[2])
     logo = logos[logo_index]
 
@@ -371,7 +372,7 @@ if __name__ == "__main__":
                 testset  = load_dataset('vera365/lexica_dataset', split='test')
                 prompts = trainset[:]["prompt"] + testset[:]["prompt"]
             else:
-                cache_size = 100
+                cache_size = 10
                 prompts = list(map(str, get_all_diffusiondb_prompts()))
 
             
