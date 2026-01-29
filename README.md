@@ -22,13 +22,13 @@ The pre-trained models used in this experiment are available at:
 ## System Requirements
 
 ### GPU Requirements
-- **Minimum**: GPU with at least **16GB VRAM** (capable of running FLUX.1-schnell model)
-- **Recommended**: GPU with **24GB+ VRAM** (e.g., NVIDIA A100, RTX 3090, RTX 4090, or similar)
+- **Minimum**: GPU with at least **32GB VRAM** (capable of running FLUX.1-schnell model)
+- **Recommended**: GPU with **40GB+ VRAM** (e.g., NVIDIA A100, RTX H100, RTX Ada 6000, or similar)
 - **CUDA**: CUDA 12.6+ compatible GPU
 - The project supports both FLUX.1-schnell and Stable Diffusion 3.5 Medium models
 
 ### Memory Requirements
-- **RAM**: **40GB** system memory (for handling large datasets and model operations)
+- **RAM**: **32GB** system memory (for handling large datasets and model operations)
 - **Storage**: At least **100GB** free space for:
   - Model checkpoints (~20-30GB)
   - Generated images and cache files (~50-70GB)
