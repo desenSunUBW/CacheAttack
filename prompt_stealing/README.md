@@ -49,6 +49,47 @@ Download or prepare the pre-trained embedding-to-text recovery model. The model 
 MODEL_PATH = f"./coco_prefix-049.pt"
 ```
 
+### Step 4: Prepare Datasets
+
+This repository uses two datasets: **Lexica** and **DiffusionDB (text-only)**.
+
+---
+
+#### 1. Lexica Dataset
+
+The **Lexica dataset** provided in this repository was prepared by following the methodology and data processing pipeline described in:
+
+> Xinyue Shen, Yiting Qu, Michael Backes, and Yang Zhang.  
+> *Prompt Stealing Attacks Against Text-to-Image Generation Models*.  
+> USENIX Security Symposium (USENIX Security), 2024.
+
+The original implementation is publicly available at:  
+https://github.com/verazuo/prompt-stealing-attack
+
+We gratefully acknowledge the authors for releasing their code and enabling reproducible research.
+
+If you use the dataset prepared in this repository, please cite the original paper.
+
+---
+
+#### 2. DiffusionDB Dataset (Text Only)
+
+For the second dataset, we use the **text-only metadata** from DiffusionDB.
+
+We download the CSV file by following **Method 3 – "Use metadata.parquet (Text Only)"** from the official DiffusionDB GitHub repository:
+
+https://github.com/poloclub/diffusiondb
+
+Specifically:
+
+1. Navigate to the DiffusionDB repository.
+2. Locate the **Method 3: Use metadata.parquet (Text Only)** section.
+3. Download the `metadata.parquet` file.
+4. Convert the parquet file to CSV if needed.
+5. Use the resulting CSV file for text-only experiments.
+
+Please refer to the original repository for detailed instructions and licensing information.
+
 **Important**: Make sure to update the `MODEL_PATH` variable in `emb_to_text.py` to point to your pre-trained model checkpoint. The model should be trained to recover prompts from CLIP embeddings (see training scripts in `model-training/` directory).
 
 ## Usage
